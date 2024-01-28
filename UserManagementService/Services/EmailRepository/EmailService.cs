@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using UserManagementService.Models;
 
-namespace UserManagementService.Services
+namespace UserManagementService.Services.EmailRepository
 {
     public class EmailService : IMailService
     {
@@ -20,7 +20,7 @@ namespace UserManagementService.Services
         public void SendEmail(Message message)
         {
             var emailMessage = CreateEmailMessage(message);
-            SendEmail(message);
+            Send(emailMessage);
         }
 
         public MimeMessage CreateEmailMessage(Message message)
@@ -29,7 +29,7 @@ namespace UserManagementService.Services
             emailMessage.From.Add(new MailboxAddress("email", _emailconfiguration.From));
             emailMessage.To.AddRange(message.To);
             emailMessage.Subject = message.Subject;
-            emailMessage.Body = new TextPart(MimeKit.Text.TextFormat.Text);
+            emailMessage.Body = new TextPart("plain") { Text = message.Content };
 
             return emailMessage;
         }
@@ -53,5 +53,6 @@ namespace UserManagementService.Services
                 client.Dispose();
             }
         }
+
     }
 }

@@ -1,10 +1,15 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using NETCore.MailKit.Core;
+using System.Data;
 using UserManagementApi.Models;
-using UserManagementApi.Models.Authentication.Signup;
+using UserManagementService.Services.AuthenticateRepository;
 using UserManagementService.Models;
+using UserManagementService.Models.Authentication.Signup;
+using UserManagementService.Services.EmailRepository;
+using UserManagementService.Models.Authentication.Login;
 using UserManagementService.Services;
 
 namespace UserManagementApi.Controllers
@@ -13,74 +18,41 @@ namespace UserManagementApi.Controllers
     [ApiController]
     public class AuthenticationController : ControllerBase
     {
-        private readonly UserManager<IdentityUser> _usermanager;
-        private readonly RoleManager<IdentityRole> _rolemanager;
+        private readonly IUnitofWork Uow;
       
-        private readonly IMailService _emailService;
-        public AuthenticationController(UserManager<IdentityUser> usermanager, RoleManager<IdentityRole> rolemanager, IMailService emailService)
+        public AuthenticationController(IUnitofWork authenticationService)
         {
-                _usermanager = usermanager;
-            _rolemanager = rolemanager;
-            _emailService = emailService;
-          
+         Uow = authenticationService;
+
         }
 
         [HttpPost]
-        public async Task<IActionResult> Register([FromBody] RegisterUser registerUser, string role)
+        [Route("Register")]
+
+        public async Task<IActionResult> Register([FromBody] RegisterUser registerUser)
         {
-            //CheckUserExistance
-            var userExists = await _usermanager.FindByEmailAsync(registerUser.email);
-            if (userExists != null)
-            {
-                return StatusCode(StatusCodes.Status403Forbidden, new Response { status = "Error", message = "User already exists!" });
-            }
-
-            //AddUser
-            IdentityUser user = new IdentityUser()
-            {
-                Email = registerUser.email,
-                SecurityStamp = Guid.NewGuid().ToString(),
-                UserName = registerUser.userame
-            };
-            //CheckRoleExistance
-            if(await _rolemanager.RoleExistsAsync(role))
-            {
-                var result = await _usermanager.CreateAsync(user, registerUser.password);
-                if (!result.Succeeded)
-                {
-                    return StatusCode(StatusCodes.Status403Forbidden, new Response { status = "Error", message = "User Creation Failed!" });
-
-                }
-                else
-                {  //AddingRoletoUser
-                    await _usermanager.AddToRoleAsync(user, role);
-                    return StatusCode(StatusCodes.Status201Created, new Response { status = "Success", message = "User Created Successfully!" });
-
-
-                }
-               
-
-            }
-            else
-            {
-                return StatusCode(StatusCodes.Status403Forbidden, new Response { status = "Error", message = "This Role Does not Exist!" });
-
-            }
-
-
-
+            var response = await Uow.AuthenticationService.RegisterUser(registerUser);
+            return Ok(response);
 
         }
 
-        [HttpGet]
-        public IActionResult TestEmail()
+        [HttpPost]
+        [Route("Login")]
+        public async Task<IActionResult> Login([FromBody] LoginModel loginmodel)
         {
-            var message = new Message(new string[] { "zubairfaheem1503@gmail.com" }, "Testing", "<h1> Hello Perky Rabbit Recruiters! </h1>");
-
-            _emailService.SendEmail(message);
-            return StatusCode(StatusCodes.Status200OK, new Response { status = "Success", message = "Email Sent Successfully" });
+            var response = await Uow.AuthenticationService.LoginUser(loginmodel);
+            return Ok(response);
+        
         }
 
+        [HttpPost]
+        [Route("OTPVerification")]
+        public async Task<ActionResult<RegisterUser>> OTPVerification(string code, string username)
+        {
+            var response = await Uow.AuthenticationService.OTPVerification(code, username);
+            return Ok(response);
+           
+        }
 
     }
 }

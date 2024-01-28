@@ -1,8 +1,9 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using UserManagementService.Models.Authentication.Login;
 
-namespace UserManagementApi.Models
+namespace UserManagementService.Models
 {
     public class ApplicationDbContext :IdentityDbContext<IdentityUser>
     {
@@ -24,6 +25,8 @@ namespace UserManagementApi.Models
 
                 );
         }
+        
+        public DbSet<OTP> Otp { get; set; }
     }
 
     

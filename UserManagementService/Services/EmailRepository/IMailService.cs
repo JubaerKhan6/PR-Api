@@ -5,13 +5,14 @@ using System.Text;
 using System.Threading.Tasks;
 using UserManagementService.Models;
 
-namespace UserManagementService.Services
+namespace UserManagementService.Services.EmailRepository
 {
     public interface IMailService
     {
-       public void SendEmail(Message message)
-       {
+        public void SendEmail(Message message)
+        {
 
-       }
+        }
+
     }
 }
